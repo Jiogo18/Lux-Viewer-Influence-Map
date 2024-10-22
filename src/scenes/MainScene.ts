@@ -808,14 +808,30 @@ class MainScene extends Phaser.Scene {
       function invertColor(color: number) {
         return 0xffffff - color;
       }
+      function combineColors(
+        colorA: number,
+        colorB: number,
+        factor: number
+      ): number {
+        function factor256(colorA: number, colorB: number) {
+          return (colorA & 0xff) * factor + (colorB & 0xff) * (1 - factor);
+        }
+        return (
+          (factor256(colorA >> 16, colorB >> 16) << 16) |
+          (factor256(colorA >> 8, colorB >> 8) << 8) |
+          factor256(colorA, colorB)
+        );
+      }
       const influence = Math.random() * 2 - 1; // TODO: get the real influence
       let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
-      tint = invertColor(colorFactor(invertColor(tint), Math.abs(influence)));
-      const tint2 = invertColor(colorFactor(invertColor(tint), 0.2));
+      const baseColor = 0xffffff; // grass 0x9d9236
+      tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
+      const tint2 = invertColor(colorFactor(invertColor(tint), 0.8)); // slightly lighter
       value.source.tintBottomLeft = tint2;
       value.source.tintBottomRight = tint2;
       value.source.tintTopLeft = tint;
       value.source.tintTopRight = tint;
+      value.source.tintFill = true;
     });
 
     // render night textures and transitions if necessary
