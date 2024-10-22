@@ -27,6 +27,7 @@ import { addCartSprite, addWorkerSprite } from './constructors/units';
 import { addCityTile } from './constructors/city';
 import { addResourceTile } from './constructors/resource';
 import { addNormalFloorTile } from './constructors/floors';
+import { InfluenceMap } from './InfluenceMap';
 
 type CommandsArray = Array<{
   command: string;
@@ -168,6 +169,34 @@ class MainScene extends Phaser.Scene {
   dynamicLayer: Phaser.Tilemaps.DynamicTilemapLayer;
 
   frames: Array<Frame> = [];
+
+  influenceMapResources: InfluenceMap = new InfluenceMap(
+    (positionHash, frame) => {
+      const resource = frame.resourceData.get(positionHash);
+      switch (resource?.type) {
+        case Resource.Types.WOOD:
+          return 0.0002 * resource.amt;
+        case Resource.Types.COAL:
+          return 0.0002 * resource.amt;
+        case Resource.Types.URANIUM:
+          return 0.0002 * resource.amt;
+        default:
+          return 0;
+      }
+    }
+  );
+
+  influenceMapUnit: InfluenceMap = new InfluenceMap((positionHash, frame) => {
+    for (const [_, unit] of frame.unitData) {
+      if (hashMapCoords(unit.pos) === positionHash) {
+        if (unit.team === 0) return 0.1;
+        else return -0.1;
+      }
+    }
+    return 0;
+  });
+
+  influencesMaps = [this.influenceMapResources, this.influenceMapUnit];
 
   /** To allow dimensions to run a match */
   pseudomatch: any = {
@@ -497,6 +526,10 @@ class MainScene extends Phaser.Scene {
       });
     }
 
+    // init influence map
+    const tilesPositionHash = [...this.floorImageTiles.keys()];
+    this.influencesMaps.forEach((map) => map.init(tilesPositionHash));
+
     // add island base
     // this.islandbaseImage = this.add.image(0, 0, 'islandbase').setDepth(9999999);
     // this.islandbaseNightImage = this.add
@@ -793,8 +826,11 @@ class MainScene extends Phaser.Scene {
       visibleCityTiles.add(hashMapCoords(data.pos));
     });
 
+    // update influence map
+    this.influencesMaps.forEach((map) => map.update(f));
     // render influence map
-    this.floorImageTiles.forEach((value) => {
+    const influenceMap = this.influenceMapResources;
+    this.floorImageTiles.forEach((value, positionHash) => {
       function colorFactor(color: number, factor: number) {
         function factor256(color256: number) {
           return Math.min(Math.round((color256 & 0xff) * factor), 0xff);
@@ -822,7 +858,7 @@ class MainScene extends Phaser.Scene {
           factor256(colorA, colorB)
         );
       }
-      const influence = Math.random() * 2 - 1; // TODO: get the real influence
+      const influence = influenceMap.getInfluence(positionHash);
       let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
       const baseColor = 0xffffff; // grass 0x9d9236
       tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
