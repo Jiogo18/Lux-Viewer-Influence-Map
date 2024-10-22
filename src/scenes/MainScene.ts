@@ -793,6 +793,31 @@ class MainScene extends Phaser.Scene {
       visibleCityTiles.add(hashMapCoords(data.pos));
     });
 
+    // render influence map
+    this.floorImageTiles.forEach((value) => {
+      function colorFactor(color: number, factor: number) {
+        function factor256(color256: number) {
+          return Math.min(Math.round((color256 & 0xff) * factor), 0xff);
+        }
+        return (
+          (factor256(color >> 16) << 16) |
+          (factor256(color >> 8) << 8) |
+          factor256(color)
+        );
+      }
+      function invertColor(color: number) {
+        return 0xffffff - color;
+      }
+      const influence = Math.random() * 2 - 1; // TODO: get the real influence
+      let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
+      tint = invertColor(colorFactor(invertColor(tint), Math.abs(influence)));
+      const tint2 = invertColor(colorFactor(invertColor(tint), 0.2));
+      value.source.tintBottomLeft = tint2;
+      value.source.tintBottomRight = tint2;
+      value.source.tintTopLeft = tint;
+      value.source.tintTopRight = tint;
+    });
+
     // render night textures and transitions if necessary
     let [startAlpha, endAlpha] = this.determineNightTransitionAlphas(turn);
     this.floorImageTiles.forEach((value) => {
