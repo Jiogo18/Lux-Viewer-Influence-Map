@@ -27,7 +27,7 @@ import { addCartSprite, addWorkerSprite } from './constructors/units';
 import { addCityTile } from './constructors/city';
 import { addResourceTile } from './constructors/resource';
 import { addNormalFloorTile } from './constructors/floors';
-import { InfluenceMap } from './InfluenceMap';
+import { INFLUENCE_MAP_PROPS_DEFAULT, InfluenceMap } from './InfluenceMap';
 
 type CommandsArray = Array<{
   command: string;
@@ -175,27 +175,40 @@ class MainScene extends Phaser.Scene {
       const resource = frame.resourceData.get(positionHash);
       switch (resource?.type) {
         case Resource.Types.WOOD:
-          return 0.0002 * resource.amt;
+          return 0.001 * resource.amt;
         case Resource.Types.COAL:
-          return 0.0002 * resource.amt;
+          return 0.002 * resource.amt;
         case Resource.Types.URANIUM:
-          return 0.0002 * resource.amt;
+          return 0.003 * resource.amt;
         default:
           return 0;
       }
+    },
+    {
+      ...INFLUENCE_MAP_PROPS_DEFAULT,
+      momentum: 0.5,
+      decay: 0.4,
     }
   );
 
-  influenceMapUnit: InfluenceMap = new InfluenceMap((positionHash, frame) => {
-    for (const [_, unit] of frame.unitData) {
-      if (hashMapCoords(unit.pos) === positionHash) {
-        if (unit.team === 0) return 0.1;
-        else return -0.1;
+  influenceMapUnit: InfluenceMap = new InfluenceMap(
+    (positionHash, frame) => {
+      for (const [_, unit] of frame.unitData) {
+        if (hashMapCoords(unit.pos) === positionHash) {
+          if (unit.team === 0) return 1;
+          else return -1;
+        }
       }
+      return 0;
+    },
+    {
+      ...INFLUENCE_MAP_PROPS_DEFAULT,
+      momentum: 0.9,
+      decay: 1.2,
     }
-    return 0;
-  });
+  );
 
+  previousFrameInfluenceMapUpdate: number = -1;
   influencesMaps = [this.influenceMapResources, this.influenceMapUnit];
 
   /** To allow dimensions to run a match */
@@ -827,7 +840,14 @@ class MainScene extends Phaser.Scene {
     });
 
     // update influence map
-    this.influencesMaps.forEach((map) => map.update(f));
+    if (turn == this.previousFrameInfluenceMapUpdate + 1) {
+      this.influencesMaps.forEach((map) => map.update(f));
+      this.previousFrameInfluenceMapUpdate = this.turn;
+    } else {
+      console.warn(
+        `Keeping influence map from turn ${this.previousFrameInfluenceMapUpdate}`
+      );
+    }
     // render influence map
     const influenceMap = this.influenceMapResources;
     this.floorImageTiles.forEach((value, positionHash) => {
