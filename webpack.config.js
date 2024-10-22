@@ -50,6 +50,10 @@ module.exports = {
         use: ['style-loader', 'css-loader'],
       },
       // { test: /lux\.js$/, loader: "expose-loader?Lux" }
+      {
+        test: /\.node$/,
+        loader: 'node-loader',
+      },
     ],
   },
   devServer: {

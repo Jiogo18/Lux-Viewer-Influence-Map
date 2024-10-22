@@ -25,6 +25,7 @@
     "expose-loader": "^0.7.5",
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
+    "node-loader": "^1.0.3",
     "prettier": "^2.1.2",
     "raw-loader": "^4.0.2",
     "serve": "^11.3.2",
