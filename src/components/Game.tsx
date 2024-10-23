@@ -544,6 +544,7 @@ export const GameComponent = () => {
                   trackUnit={trackUnit}
                   untrackUnit={untrackUnit}
                   trackedUnitID={trackedUnitID}
+                  influence={main.getInfluence(hashMapCoords(selectedTileData.pos))}
                 />
               )}
             </div>

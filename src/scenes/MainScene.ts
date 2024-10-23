@@ -214,6 +214,25 @@ class MainScene extends Phaser.Scene {
 
   loadedInfluenceMap?: number[][];
 
+  updateInfluence(frame: Frame) {
+    if (this.turn == this.previousFrameInfluenceMapUpdate + 1) {
+      this.influencesMaps.forEach((map) => map.update(frame));
+      this.previousFrameInfluenceMapUpdate = this.turn;
+    } else {
+      console.warn(
+        `Keeping influence map from turn ${this.previousFrameInfluenceMapUpdate}`
+      );
+    }
+  }
+
+  getInfluence(positionHash: number): number {
+    // return this.influenceMapUnit.getInfluence(positionHash);
+    // return this.influenceMapResources.getInfluence(positionHash);
+    const position = hashToMapPosition(positionHash);
+    const positionIndex = position.x + position.y * this.mapWidth;
+    return this.loadedInfluenceMap?.[this.turn]?.[positionIndex] ?? 0;
+  }
+
   /** To allow dimensions to run a match */
   pseudomatch: any = {
     state: {},
@@ -843,21 +862,8 @@ class MainScene extends Phaser.Scene {
     });
 
     // update influence map
-    if (turn == this.previousFrameInfluenceMapUpdate + 1) {
-      this.influencesMaps.forEach((map) => map.update(f));
-      this.previousFrameInfluenceMapUpdate = this.turn;
-    } else {
-      console.warn(
-        `Keeping influence map from turn ${this.previousFrameInfluenceMapUpdate}`
-      );
-    }
+    this.updateInfluence(f);
     // render influence map
-    let influenceMap: (InfluenceMap | number[]);
-    // influenceMap = this.influenceMapUnit;
-    // influenceMap = this.influenceMapResources;
-    if (this.loadedInfluenceMap) {
-      influenceMap = this.loadedInfluenceMap[turn];
-    }
     this.floorImageTiles.forEach((value, positionHash) => {
       function colorFactor(color: number, factor: number) {
         function factor256(color256: number) {
@@ -886,12 +892,7 @@ class MainScene extends Phaser.Scene {
           factor256(colorA, colorB)
         );
       }
-      const position = hashToMapPosition(positionHash);
-      const positionIndex = position.x + position.y * this.mapWidth;
-      const influence =
-        influenceMap instanceof InfluenceMap
-          ? influenceMap.getInfluence(positionHash)
-          : influenceMap?.[positionIndex] ?? 0;
+      const influence = this.getInfluence(positionHash);
       let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
       const baseColor = 0xffffff; // grass 0x9d9236
       tint = combineColors(baseColor, tint, 1 - Math.abs(influence));

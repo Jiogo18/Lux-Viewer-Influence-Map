@@ -18,6 +18,7 @@ export type TileStatsProps = Partial<FrameTileData> & {
   trackUnit: (id: string) => void;
   untrackUnit: (id: string) => void;
   trackedUnitID: string;
+  influence: number;
 };
 const TileStats = ({
   pos,
@@ -29,6 +30,7 @@ const TileStats = ({
   roadLevel,
   turn,
   trackedUnitID,
+  influence,
   untrackUnit,
   trackUnit,
 }: TileStatsProps) => {
@@ -57,6 +59,10 @@ const TileStats = ({
               <div className="coords-label">Coordinates</div>
               <span>
                 ({pos.x}, {pos.y})
+              </span>
+              <div className="influence-label">Influence</div>
+              <span>
+                {influence}
               </span>
             </div>
             <div className="subtitle">General</div>
