@@ -26,6 +26,8 @@ import { parseReplayData } from '../utils/replays';
 import clientConfigs from './configs.json';
 import WarningsPanel from './WarningsPanel';
 // import debug_replay from './replay.json';
+const debug_influence_map = undefined;
+// import debug_influence_map from './replay_influence_map.json';
 export type GameComponentProps = {
   // replayData?: any;
 };
@@ -97,6 +99,7 @@ export const GameComponent = () => {
       game.events.on('setup', () => {
         // @ts-ignore
         const main: MainScene = game.scene.scenes[0];
+        main.loadedInfluenceMap = debug_influence_map;
         setMain(main);
         const configs = main.luxgame.configs;
         setConfigs(configs as LuxMatchConfigs);

@@ -9,6 +9,7 @@ import {
   getNightTransitionTween,
   getRoadType,
   hashMapCoords,
+  hashToMapPosition,
   mapCoordsToIsometricPixels,
   mapIsometricPixelsToPosition,
   mapPosToIsometricPixels,
@@ -210,6 +211,8 @@ class MainScene extends Phaser.Scene {
 
   previousFrameInfluenceMapUpdate: number = -1;
   influencesMaps = [this.influenceMapResources, this.influenceMapUnit];
+
+  loadedInfluenceMap?: number[][];
 
   /** To allow dimensions to run a match */
   pseudomatch: any = {
@@ -849,7 +852,12 @@ class MainScene extends Phaser.Scene {
       );
     }
     // render influence map
-    const influenceMap = this.influenceMapResources;
+    let influenceMap: (InfluenceMap | number[]);
+    // influenceMap = this.influenceMapUnit;
+    // influenceMap = this.influenceMapResources;
+    if (this.loadedInfluenceMap) {
+      influenceMap = this.loadedInfluenceMap[turn];
+    }
     this.floorImageTiles.forEach((value, positionHash) => {
       function colorFactor(color: number, factor: number) {
         function factor256(color256: number) {
@@ -878,7 +886,12 @@ class MainScene extends Phaser.Scene {
           factor256(colorA, colorB)
         );
       }
-      const influence = influenceMap.getInfluence(positionHash);
+      const position = hashToMapPosition(positionHash);
+      const positionIndex = position.x + position.y * this.mapWidth;
+      const influence =
+        influenceMap instanceof InfluenceMap
+          ? influenceMap.getInfluence(positionHash)
+          : influenceMap?.[positionIndex] ?? 0;
       let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
       const baseColor = 0xffffff; // grass 0x9d9236
       tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
