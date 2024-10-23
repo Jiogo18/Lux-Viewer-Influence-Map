@@ -892,6 +892,8 @@ class MainScene extends Phaser.Scene {
 
     // render night textures and transitions if necessary
     let [startAlpha, endAlpha] = this.determineNightTransitionAlphas(turn);
+    startAlpha /= 10;
+    endAlpha /= 10;
     this.floorImageTiles.forEach((value) => {
       value.overlay.setAlpha(startAlpha);
       this.tweens.add(
