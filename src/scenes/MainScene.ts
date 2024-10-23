@@ -896,11 +896,11 @@ class MainScene extends Phaser.Scene {
       let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
       const baseColor = 0xffffff; // grass 0x9d9236
       tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
-      const tint2 = invertColor(colorFactor(invertColor(tint), 0.8)); // slightly lighter
-      value.source.tintBottomLeft = tint2;
-      value.source.tintBottomRight = tint2;
-      value.source.tintTopLeft = tint;
-      value.source.tintTopRight = tint;
+      const tint2 = combineColors(0x808080, tint, 0.1); // slightly darker
+      value.source.tintTopLeft = tint2;
+      value.source.tintTopRight = tint2;
+      value.source.tintBottomLeft = tint;
+      value.source.tintBottomRight = tint;
       value.source.tintFill = true;
     });
 
