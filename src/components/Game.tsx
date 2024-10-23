@@ -99,7 +99,7 @@ export const GameComponent = () => {
       game.events.on('setup', () => {
         // @ts-ignore
         const main: MainScene = game.scene.scenes[0];
-        main.loadedInfluenceMap = debug_influence_map;
+        main.loadedInfluenceMap = replayData.influenceMap;
         setMain(main);
         const configs = main.luxgame.configs;
         setConfigs(configs as LuxMatchConfigs);
@@ -291,28 +291,58 @@ export const GameComponent = () => {
     setGame(newgame);
   };
 
+  interface FileData {
+    file: File;
+    name: string;
+    ext: string;
+  }
+  function getUploadedFiles() {
+    if (fileInput.current.files.length === 0) {
+      return;
+    }
+    function fromUploadedFile(file: File): FileData {
+      const name = file.name;
+      const meta = name.split('.');
+      return { file, name, ext: meta[meta.length - 1] };
+    }
+    const file0: FileData = fromUploadedFile(fileInput.current.files[0]);
+    const files: { replay: FileData; influence?: FileData } = {
+      replay: file0,
+      influence: undefined,
+    };
+    if (fileInput.current.files.length > 1) {
+      const file1 = fromUploadedFile(fileInput.current.files[1]);
+      if (file0.name.toLowerCase().includes('influence')) {
+        files.influence = file0;
+        files.replay = file1;
+      } else {
+        files.influence = file1;
+      }
+    }
+    return files;
+  }
+
   /** handle uploaded files */
   const handleUpload = () => {
     setUploading(true);
     setUseKaggleReplay(false);
-    if (fileInput.current.files.length) {
-      const file = fileInput.current.files[0];
-      const name = file.name;
-      const meta = name.split('.');
-
-      if (meta[meta.length - 1] === 'json') {
-        file
-          .text()
-          .then(JSON.parse)
-          .then((data) => {
-            setUploading(false);
-            data = parseReplayData(data);
-            loadGame(data);
-          })
-          .catch((err) => {
-            console.error(err);
-            alert(err);
-          });
+    const files = getUploadedFiles();
+    if (files) {
+      if (files.replay.ext === 'json') {
+        Promise.all([
+          files.replay.file.text().then(JSON.parse).then(parseReplayData),
+          files.influence?.file.text().then(JSON.parse),
+        ])
+        .then(([replayData, influenceData]) => {
+          replayData.influenceMap = influenceData;
+          loadGame(replayData);
+        })
+        .catch((err) => {
+          console.error(err);
+          alert(err);
+        }).finally(() => {
+          setUploading(false);
+        });
       }
     }
   };
@@ -467,6 +497,7 @@ export const GameComponent = () => {
               <input
                 accept=".json, .luxr"
                 type="file"
+                multiple={true}
                 style={{ display: 'none' }}
                 onChange={handleUpload}
                 ref={fileInput}
