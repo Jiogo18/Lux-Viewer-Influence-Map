@@ -213,6 +213,7 @@ class MainScene extends Phaser.Scene {
   influencesMaps = [this.influenceMapResources, this.influenceMapUnit];
 
   loadedInfluenceMap?: number[][];
+  influenceScale: number = 1;
 
   updateInfluence(frame: Frame) {
     if (this.turn == this.previousFrameInfluenceMapUpdate + 1) {
@@ -230,7 +231,10 @@ class MainScene extends Phaser.Scene {
     // return this.influenceMapResources.getInfluence(positionHash);
     const position = hashToMapPosition(positionHash);
     const positionIndex = position.x * this.mapHeight + position.y;
-    return (this.loadedInfluenceMap?.[this.turn]?.[positionIndex] ?? 0) * 1;
+    return (
+      (this.loadedInfluenceMap?.[this.turn]?.[positionIndex] ?? 0) *
+      this.influenceScale
+    );
   }
 
   /** To allow dimensions to run a match */
