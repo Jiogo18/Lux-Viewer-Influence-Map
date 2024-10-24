@@ -60,10 +60,13 @@ const TileStats = ({
               <span>
                 ({pos.x}, {pos.y})
               </span>
-              <div className="influence-label">Influence</div>
-              <span>
-                {influence}
-              </span>
+              {influence !== null && (
+                <>
+                  <div className="influence-label">Influence</div>
+
+                  <span>{Math.round(influence * 10000) / 10000}</span>
+                </>
+              )}
             </div>
             <div className="subtitle">General</div>
             {resources && (

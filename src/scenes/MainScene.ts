@@ -214,10 +214,27 @@ class MainScene extends Phaser.Scene {
 
   loadedInfluenceMap?: number[][];
   influenceScale: number = 1;
+  selectedInfluenceMap?: string;
+
+  getSelectedInfluenceMap(): InfluenceMap | undefined {
+    switch (this.selectedInfluenceMap) {
+      case 'resources':
+        return this.influenceMapResources;
+      case 'units':
+        return this.influenceMapUnit;
+      default:
+        return undefined;
+    }
+  }
 
   updateInfluence(frame: Frame) {
+    const influenceMap = this.getSelectedInfluenceMap();
+    if (influenceMap === undefined) {
+      return;
+    }
+
     if (this.turn == this.previousFrameInfluenceMapUpdate + 1) {
-      this.influencesMaps.forEach((map) => map.update(frame));
+      influenceMap.update(frame);
       this.previousFrameInfluenceMapUpdate = this.turn;
     } else {
       console.warn(
@@ -226,15 +243,19 @@ class MainScene extends Phaser.Scene {
     }
   }
 
-  getInfluence(positionHash: number): number {
-    // return this.influenceMapUnit.getInfluence(positionHash);
-    // return this.influenceMapResources.getInfluence(positionHash);
+  getInfluence(positionHash: number): number | null {
+    const selectedInfluenceMap = this.getSelectedInfluenceMap();
+    if (selectedInfluenceMap !== undefined) {
+      return selectedInfluenceMap.getInfluence(positionHash);
+    }
+
+    const influenceMap = this.loadedInfluenceMap?.[this.turn];
+    if (influenceMap === undefined) {
+      return null;
+    }
     const position = hashToMapPosition(positionHash);
     const positionIndex = position.x * this.mapHeight + position.y;
-    return (
-      (this.loadedInfluenceMap?.[this.turn]?.[positionIndex] ?? 0) *
-      this.influenceScale
-    );
+    return (influenceMap[positionIndex] ?? 0) * this.influenceScale;
   }
 
   /** To allow dimensions to run a match */
@@ -869,19 +890,6 @@ class MainScene extends Phaser.Scene {
     this.updateInfluence(f);
     // render influence map
     this.floorImageTiles.forEach((value, positionHash) => {
-      function colorFactor(color: number, factor: number) {
-        function factor256(color256: number) {
-          return Math.min(Math.round((color256 & 0xff) * factor), 0xff);
-        }
-        return (
-          (factor256(color >> 16) << 16) |
-          (factor256(color >> 8) << 8) |
-          factor256(color)
-        );
-      }
-      function invertColor(color: number) {
-        return 0xffffff - color;
-      }
       function combineColors(
         colorA: number,
         colorB: number,
@@ -897,15 +905,17 @@ class MainScene extends Phaser.Scene {
         );
       }
       const influence = this.getInfluence(positionHash);
-      let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
-      const baseColor = 0xffffff; // grass 0x9d9236
-      tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
-      const tint2 = combineColors(0x808080, tint, 0.1); // slightly darker
-      value.source.tintTopLeft = tint2;
-      value.source.tintTopRight = tint2;
-      value.source.tintBottomLeft = tint;
-      value.source.tintBottomRight = tint;
-      value.source.tintFill = true;
+      if (influence !== null) {
+        let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
+        const baseColor = 0xffffff; // grass 0x9d9236
+        tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
+        const tint2 = combineColors(0x808080, tint, 0.1); // slightly darker
+        value.source.tintTopLeft = tint2;
+        value.source.tintTopRight = tint2;
+        value.source.tintBottomLeft = tint;
+        value.source.tintBottomRight = tint;
+        value.source.tintFill = true;
+      }
     });
 
     // render night textures and transitions if necessary

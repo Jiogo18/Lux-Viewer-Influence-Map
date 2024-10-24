@@ -98,7 +98,9 @@ export const GameComponent = () => {
         // @ts-ignore
         const main: MainScene = game.scene.scenes[0];
         main.loadedInfluenceMap = replayData.influenceMap;
-        main.influenceScale = replayData.influenceScale;
+        main.influenceScale =
+          parseInt(url.searchParams.get('influenceScale') ?? '1') || 1;
+        main.selectedInfluenceMap = url.searchParams.get('influenceMap');
         setMain(main);
         const configs = main.luxgame.configs;
         setConfigs(configs as LuxMatchConfigs);
@@ -406,14 +408,11 @@ export const GameComponent = () => {
     // loadGame(parseReplayData(debug_replay));
     // load game from parameter 'replay'
     // the replay must be in /dist/replays/
-    const url = new URL(document.location.href);
     if (!uploading && url.searchParams.has('replay')) {
       setUploading(true);
       const replay = url.searchParams.get('replay');
       const replayFile = './replays/' + replay + '.json';
       const influenceFile = './replays/' + replay + '.influence.json';
-      const influenceScale =
-        parseInt(url.searchParams.get('influenceScale') ?? '1') || 1;
       Promise.all([
         window
           .fetch(replayFile)
@@ -423,7 +422,6 @@ export const GameComponent = () => {
       ])
         .then(([replayData, influenceMap]) => {
           replayData.influenceMap = influenceMap;
-          replayData.influenceScale = influenceScale;
           loadGame(replayData);
         })
         .finally(() => {
