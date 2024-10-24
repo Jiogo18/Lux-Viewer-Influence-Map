@@ -4,16 +4,23 @@
   right: 0;
   position: absolute;
   text-align: right;
+  pointer-events: none;
+  }
+  
+  .GlobalStats> :not(.stats-wrapper) {
+    pointer-events: initial;
 }
 .GlobalStats .stats-wrapper {
   transform: translateX(0rem);
   transition: transform 0.4s;
+  pointer-events: none;
 }
 .GlobalStats .LuxCard {
   text-align: left;
   padding: 0;
   width: 25rem;
   overflow: hidden;
+  pointer-events: initial;
 }
 /** add the card layering depth **/
 .GlobalStats .overall,
