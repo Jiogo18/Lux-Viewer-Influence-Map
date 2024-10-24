@@ -549,6 +549,84 @@ class MainScene extends Phaser.Scene {
   }
 
   /**
+   * Apply cheats to the game using the url search param 'cheats'
+   *
+   * Warning: the simulation is run by the viewer, so it can be in an incoherent state with the replay
+   * e.g.
+   * - no_night => cities and units never die
+   * - no_city_build_cost => the unit still has the resources, so it can't collect more wood
+   * - infinite_inventory => the unit collects more resources than it did during the original simulation
+   */
+  private applyCheats() {
+    const url = new URL(window.location.href);
+    const p = this.luxgame.configs.parameters;
+    if (url.searchParams.has('cheats')) {
+      const cheatsParam = url.searchParams.get('cheats');
+      const cheatsList = cheatsParam.split(',').map((cheat) => cheat.trim());
+
+      const cheats = {
+        // day/night
+        no_night() {
+          p.DAY_LENGTH = p.MAX_DAYS;
+        },
+        no_day() {
+          p.DAY_LENGTH = 0;
+          p.NIGHT_LENGTH = p.MAX_DAYS;
+        },
+
+        // light upkeep (does nothing if no_night is set)
+        no_light_upkeep_unit() {
+          p.LIGHT_UPKEEP.WORKER = 0;
+          p.LIGHT_UPKEEP.CART = 0;
+        },
+        no_light_upkeep_city() {
+          p.LIGHT_UPKEEP.CITY = 0;
+        },
+        no_light_upkeep() {
+          p.LIGHT_UPKEEP = { WORKER: 0, CART: 0, CITY: 0 };
+        },
+
+        // cost
+        no_city_build_cost() {
+          p.CITY_BUILD_COST = 0;
+        },
+        no_research_cost() {
+          p.RESEARCH_REQUIREMENTS = { COAL: 0, URANIUM: 0 };
+        },
+        no_cost() {
+          cheats.no_city_build_cost();
+          cheats.no_research_cost();
+        },
+
+        // action cooldown
+        no_city_cooldown() {
+          p.CITY_ACTION_COOLDOWN = 0;
+        },
+        no_unit_cooldown() {
+          p.UNIT_ACTION_COOLDOWN = { WORKER: 0, CART: 0 };
+        },
+        no_cooldown() {
+          cheats.no_city_cooldown();
+          cheats.no_unit_cooldown();
+        },
+
+        // unit capacity
+        infinite_inventory() {
+          p.RESOURCE_CAPACITY = { WORKER: Infinity, CART: Infinity };
+        },
+      };
+
+      for (const cheat of cheatsList) {
+        if (cheats[cheat]) {
+          cheats[cheat]();
+        } else {
+          console.warn(`Cheat ${cheat} unknown`);
+        }
+      }
+    }
+  }
+
+  /**
    * Load replay data into game
    * and generate all relevant frames
    */
@@ -567,6 +645,7 @@ class MainScene extends Phaser.Scene {
     this.graphics = this.add.graphics({ x: 0, y: 0 });
     this.mapWidth = width;
     this.mapHeight = height;
+    this.applyCheats();
 
     for (let y = 0; y < height; y++) {
       let row = this.luxgame.map.getRow(y);
