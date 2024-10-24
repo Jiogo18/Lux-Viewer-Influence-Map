@@ -8,6 +8,7 @@
     "dev": "webpack --mode development && webpack-dev-server --mode development --devtool source-map",
     "build": "rm -rf dist && webpack --mode production && cp -r assets dist/assets && cp -r public/* dist",
     "serve": "serve dist",
+    "deploy": "npm run build && gh-pages -d dist",
     "prettier": "prettier --write 'src/**/*.ts' 'src/**/*.tsx'"
   },
   "sideEffects": [
@@ -24,6 +25,7 @@
     "css-loader": "^4.3.0",
     "expose-loader": "^0.7.5",
     "file-loader": "^6.1.0",
+    "gh-pages": "^6.2.0",
     "html-webpack-plugin": "^4.4.1",
     "node-loader": "^1.0.3",
     "prettier": "^2.1.2",
