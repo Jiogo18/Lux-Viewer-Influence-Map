@@ -6,7 +6,7 @@ import {
   Button,
   Switch,
   FormControlLabel,
-  createMuiTheme,
+  createTheme,
   ThemeProvider,
   FormGroup,
 } from '@material-ui/core';
@@ -30,7 +30,7 @@ export type GameComponentProps = {
   // replayData?: any;
 };
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
       main: '#fea201',
