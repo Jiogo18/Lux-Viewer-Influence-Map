@@ -26,8 +26,6 @@ import { parseReplayData } from '../utils/replays';
 import clientConfigs from './configs.json';
 import WarningsPanel from './WarningsPanel';
 // import debug_replay from './replay.json';
-const debug_influence_map = undefined;
-// import debug_influence_map from './replay_influence_map.json';
 export type GameComponentProps = {
   // replayData?: any;
 };
@@ -333,16 +331,17 @@ export const GameComponent = () => {
           files.replay.file.text().then(JSON.parse).then(parseReplayData),
           files.influence?.file.text().then(JSON.parse),
         ])
-        .then(([replayData, influenceData]) => {
-          replayData.influenceMap = influenceData;
-          loadGame(replayData);
-        })
-        .catch((err) => {
-          console.error(err);
-          alert(err);
-        }).finally(() => {
-          setUploading(false);
-        });
+          .then(([replayData, influenceData]) => {
+            replayData.influenceMap = influenceData;
+            loadGame(replayData);
+          })
+          .catch((err) => {
+            console.error(err);
+            alert(err);
+          })
+          .finally(() => {
+            setUploading(false);
+          });
       }
     }
   };
@@ -404,6 +403,29 @@ export const GameComponent = () => {
       el[0].style.fontSize = '8pt';
     }
     // loadGame(parseReplayData(debug_replay));
+    // load game from parameter 'replay'
+    // the replay must be in /dist/replays/
+    const url = new URL(document.location.href);
+    if (!uploading && url.searchParams.has('replay')) {
+      setUploading(true);
+      const replay = url.searchParams.get('replay');
+      const replayFile = './replays/' + replay + '.json';
+      const influenceFile = './replays/' + replay + '.influence.json';
+      Promise.all([
+        window
+          .fetch(replayFile)
+          .then((response) => response.json())
+          .then(parseReplayData),
+        window.fetch(influenceFile).then((response) => response.json()),
+      ])
+        .then(([replayData, influenceMap]) => {
+          replayData.influenceMap = influenceMap;
+          loadGame(replayData);
+        })
+        .finally(() => {
+          setUploading(false);
+        });
+    }
   }, []);
   useEffect(() => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -575,7 +597,9 @@ export const GameComponent = () => {
                   trackUnit={trackUnit}
                   untrackUnit={untrackUnit}
                   trackedUnitID={trackedUnitID}
-                  influence={main.getInfluence(hashMapCoords(selectedTileData.pos))}
+                  influence={main.getInfluence(
+                    hashMapCoords(selectedTileData.pos)
+                  )}
                 />
               )}
             </div>
