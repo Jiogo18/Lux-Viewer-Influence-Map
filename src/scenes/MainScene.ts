@@ -974,6 +974,7 @@ class MainScene extends Phaser.Scene {
         colorB: number,
         factor: number
       ): number {
+        factor = Math.max(0, Math.min(factor, 1));
         function factor256(colorA: number, colorB: number) {
           return (colorA & 0xff) * factor + (colorB & 0xff) * (1 - factor);
         }
