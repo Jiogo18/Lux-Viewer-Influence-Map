@@ -99,7 +99,7 @@ export const GameComponent = () => {
         const main: MainScene = game.scene.scenes[0];
         main.loadedInfluenceMap = replayData.influenceMap;
         main.influenceScale =
-          parseInt(url.searchParams.get('influenceScale') ?? '1') || 1;
+          parseFloat(url.searchParams.get('influenceScale') ?? '1') || 1;
         main.selectedInfluenceMap = url.searchParams.get('influenceMap');
         setMain(main);
         const configs = main.luxgame.configs;
