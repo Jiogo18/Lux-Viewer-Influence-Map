@@ -1,5 +1,5 @@
 .GlobalStats {
-  overflow: hidden;
+  overflow: visible;
   width: 35rem;
   right: 0;
   position: absolute;
@@ -123,8 +123,8 @@
   content: '';
   position: absolute;
   margin-top: 24px;
-  /* left: 10%; */
-  left: 8.5rem;
+  left: 10%;
+    /* left: 8.5rem; */
   background: linear-gradient(
     90deg,
     rgba(0, 0, 0, 0) 0%,
@@ -204,8 +204,8 @@
   content: '';
   position: absolute;
   margin-top: 26px;
-  /* left: 10%; */
-  left: 8.5rem;
+  left: 10%;
+    /* left: 8.5rem; */
   background: linear-gradient(
     90deg,
     rgba(0, 0, 0, 0) 0%,

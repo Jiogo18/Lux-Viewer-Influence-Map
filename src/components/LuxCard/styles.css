@@ -16,6 +16,8 @@
     rgba(0, 175, 189, 0.5) 60%,
     rgba(0, 175, 189, 0) 100%
   ); */
+  backdrop-filter: blur(1rem);
+    background: #40404040;
 }
 .LuxCard > .title {
   font-size: 1.75rem;

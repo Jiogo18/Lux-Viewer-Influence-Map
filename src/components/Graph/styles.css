@@ -4,3 +4,12 @@
 .Graph .recharts-surface {
   height: 260px;
 }
+
+.Graph text.recharts-cartesian-axis-tick-value {
+  fill: rgb(255, 255, 255);
+}
+
+.Graph line.recharts-cartesian-axis-tick-line,
+.Graph line.recharts-cartesian-axis-line {
+  stroke: rgb(255, 255, 255);
+}
