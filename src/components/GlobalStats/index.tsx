@@ -169,11 +169,6 @@ const GlobalStats = ({
       <div className={'stats-wrapper ' + (hidden ? 'hidden-card' : '')}>
         <LuxCard title="Global Stats">
           <Grid container className="overall">
-            <Grid item xs={1} key={1000}>
-              <div className="cityTilesLabel">Total CityTiles</div>
-              <div className="storedFuelLabel">Total City Fuel</div>
-              <div className="researchPointsLabel">Research Points</div>
-            </Grid>
             <Grid item xs={5} key={0}>
               <div className="teamLabel">
                 <div className="icons">
@@ -191,7 +186,11 @@ const GlobalStats = ({
                 </div>
               </div>
             </Grid>
-            <Grid item xs={1} key={1001}></Grid>
+            <Grid item xs={2} key={1000}>
+              <div className="cityTilesLabel">Total CityTiles</div>
+              <div className="storedFuelLabel">Total City Fuel</div>
+              <div className="researchPointsLabel">Research Points</div>
+            </Grid>
             <Grid item xs={5} key={1}>
               <div className="teamLabel">
                 <div className="icons">

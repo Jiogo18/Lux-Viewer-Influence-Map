@@ -41,7 +41,7 @@
 .GlobalStats .researchPointsLabel {
   position: absolute;
   /* left: -2.5rem; */
-  left: 8.5rem;
+  /* left: 8.5rem; */
   font-size: 0.85rem;
   top: 12.5rem;
   background: linear-gradient(
@@ -55,6 +55,9 @@
   line-height: 2rem;
   z-index: 1;
   font-weight: 500;
+  left: 9.5rem;
+  text-align: center;
+  width: 25%;
 }
 .GlobalStats .storedFuelLabel {
   top: 15rem;
