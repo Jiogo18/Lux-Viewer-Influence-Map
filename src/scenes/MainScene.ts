@@ -662,6 +662,38 @@ class MainScene extends Phaser.Scene {
           this.globalStats.totalResources[cell.resource.type] +=
             cell.resource.amount;
         }
+
+        if (replayData.influenceMapFX) {
+          // compensate for grass color to get a white background
+          const brightness = 230; // white tile: 263.8
+          const r = brightness / 0x9d;
+          const g = brightness / 0x92;
+          const b = brightness / 0x36;
+          const colorMatrix = img.preFX.addColorMatrix();
+          // 5x4 matrix, rows are r, g, b, a
+          colorMatrix.set([
+            r,
+            0,
+            0,
+            0,
+            0,
+            0,
+            g,
+            0,
+            0,
+            0,
+            0,
+            0,
+            b,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+          ]);
+        }
       });
     }
 
@@ -989,12 +1021,7 @@ class MainScene extends Phaser.Scene {
         let tint = influence >= 0 ? 0xf5a500 : 0x1a45ff;
         const baseColor = 0xffffff; // grass 0x9d9236
         tint = combineColors(baseColor, tint, 1 - Math.abs(influence));
-        const tint2 = combineColors(0x808080, tint, 0.1); // slightly darker
-        value.source.tintTopLeft = tint2;
-        value.source.tintTopRight = tint2;
-        value.source.tintBottomLeft = tint;
-        value.source.tintBottomRight = tint;
-        value.source.tintFill = true;
+        value.source.setTint(tint);
       }
     });
 

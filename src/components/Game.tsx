@@ -336,6 +336,9 @@ export const GameComponent = () => {
         ])
           .then(([replayData, influenceData]) => {
             replayData.influenceMap = influenceData;
+            if (influenceData || url.searchParams.has('influenceMap')) {
+              replayData.influenceMapFX = true;
+            }
             loadGame(replayData);
           })
           .catch((err) => {
