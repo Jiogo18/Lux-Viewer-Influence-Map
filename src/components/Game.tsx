@@ -468,6 +468,42 @@ export const GameComponent = () => {
     setTrackedUnitID(id);
   };
 
+  const [wheelDeltaXBuffer, setWheelDeltaXBuffer] = useState<number>(0);
+
+  useEffect(() => {
+    const handleZoom = (e: WheelEvent) => {
+      if (
+        !(
+          e.target instanceof HTMLDivElement &&
+          e.target.classList.contains('speed-display')
+        )
+      ) {
+        // handle zoom in/out
+        setVisualScale(visualScale - scaleSize * Math.min(1, e.deltaY / 120));
+      }
+
+      setWheelDeltaXBuffer(wheelDeltaXBuffer + e.deltaX);
+    };
+
+    document.addEventListener('wheel', handleZoom);
+    return () => {
+      document.removeEventListener('wheel', handleZoom);
+    };
+  }, [visualScale, wheelDeltaXBuffer]);
+
+  useEffect(() => {
+    const turnsToMove =
+      Math.floor(wheelDeltaXBuffer / 100) + (wheelDeltaXBuffer < 0 ? 1 : 0);
+    if (turnsToMove != 0) {
+      const newTurn = Math.max(
+        0,
+        Math.min(turn + turnsToMove, main.frames.length - 1)
+      );
+      moveToTurn(newTurn);
+      setWheelDeltaXBuffer(wheelDeltaXBuffer - turnsToMove * 100);
+    }
+  }, [wheelDeltaXBuffer]);
+
   const [debugOn, _setDebug] = useState(true);
   const setDebug = (
     e: React.ChangeEvent<HTMLInputElement>,

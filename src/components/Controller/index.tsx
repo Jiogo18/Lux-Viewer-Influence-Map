@@ -106,7 +106,18 @@ const Controller = ({
         >
           <img className="right-arrow-icon" src={ArrowsSVG} />
         </IconButton>
-        <div className="speed-display">{playbackSpeed}x</div>
+        <div
+          className="speed-display"
+          onWheel={(e) => {
+            if (e.deltaY < 0) {
+              setPlaybackSpeed(playbackSpeed * 2);
+            } else if (e.deltaY > 0) {
+              setPlaybackSpeed(playbackSpeed / 2);
+            }
+          }}
+        >
+          {playbackSpeed}x
+        </div>
 
         <input
           accept=".json, .luxr"

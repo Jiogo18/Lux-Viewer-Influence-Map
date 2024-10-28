@@ -65,7 +65,7 @@
   vertical-align: middle;
   align-items: center;
   display: flex;
-  /* padding: 12px; */
+  padding: 12px;
   margin-right: 1rem;
 }
 .Controller .replay-buttons img {
