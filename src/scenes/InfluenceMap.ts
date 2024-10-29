@@ -41,6 +41,8 @@ export class InfluenceMap {
   private dataTiles: Map<number, number> = new Map();
   private bufferDataTiles: Map<number, number> = new Map();
   private cooldown: number = 0;
+  public mapWidth: number = 16;
+  public mapHeight: number = 16;
 
   /**
    * @param getBaseInfluence Callback to obtain the influence of a tile
@@ -51,11 +53,13 @@ export class InfluenceMap {
     private props: InfluenceMapProps = INFLUENCE_MAP_PROPS_DEFAULT
   ) {}
 
-  init(tilesPositionHash: number[]) {
+  init(tilesPositionHash: number[], mapWidth: number, mapHeight: number) {
     for (let positionHash of tilesPositionHash) {
       this.dataTiles.set(positionHash, 0);
       this.bufferDataTiles.set(positionHash, 0);
     }
+    this.mapWidth = mapWidth;
+    this.mapHeight = mapHeight;
   }
 
   private applyDecay(value: number): number {
@@ -113,8 +117,8 @@ export class InfluenceMap {
     return [
       0 < position.x ? positionHash - facteurHashX : undefined,
       0 < position.y ? positionHash - facteurHashY : undefined,
-      position.x < 15 ? positionHash + facteurHashX : undefined,
-      position.x < 15 ? positionHash + facteurHashY : undefined,
+      position.x < this.mapWidth - 1 ? positionHash + facteurHashX : undefined,
+      position.y < this.mapHeight - 1 ? positionHash + facteurHashY : undefined,
     ];
   }
 }

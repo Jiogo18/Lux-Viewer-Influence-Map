@@ -699,7 +699,7 @@ class MainScene extends Phaser.Scene {
 
     // init influence map
     const tilesPositionHash = [...this.floorImageTiles.keys()];
-    this.influencesMaps.forEach((map) => map.init(tilesPositionHash));
+    this.influencesMaps.forEach((map) => map.init(tilesPositionHash, this.mapWidth, this.mapHeight));
 
     // add island base
     // this.islandbaseImage = this.add.image(0, 0, 'islandbase').setDepth(9999999);
