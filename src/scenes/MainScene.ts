@@ -28,7 +28,11 @@ import { addCartSprite, addWorkerSprite } from './constructors/units';
 import { addCityTile } from './constructors/city';
 import { addResourceTile } from './constructors/resource';
 import { addNormalFloorTile } from './constructors/floors';
-import { INFLUENCE_MAP_PROPS_DEFAULT, InfluenceMap } from './InfluenceMap';
+import {
+  createGaussianLikeMatrix,
+  createInfluenceMapPropsDefault,
+  InfluenceMap,
+} from './InfluenceMap';
 
 type CommandsArray = Array<{
   command: string;
@@ -186,9 +190,15 @@ class MainScene extends Phaser.Scene {
       }
     },
     {
-      ...INFLUENCE_MAP_PROPS_DEFAULT,
-      momentum: 0.5,
-      decay: 0.4,
+      ...createInfluenceMapPropsDefault(),
+      momentum: 0.2,
+      convolutionMatrix: createGaussianLikeMatrix({
+        spread: 1,
+        naturalDecay: 0.05,
+        // this matrix is the reach of a unit
+        // (middle could be 0.1 in order to get a higher value where there is multiple ressources in a 90° angle)
+        baseMatrix: [0, 1, 0, 1, 1, 1, 0, 1, 0],
+      }),
     }
   );
 
@@ -203,9 +213,12 @@ class MainScene extends Phaser.Scene {
       return 0;
     },
     {
-      ...INFLUENCE_MAP_PROPS_DEFAULT,
-      momentum: 0.9,
-      decay: 1.2,
+      ...createInfluenceMapPropsDefault(),
+      momentum: 0.5,
+      convolutionMatrix: createGaussianLikeMatrix({
+        spread: 0.02,
+        naturalDecay: 0.001,
+      }),
     }
   );
 
@@ -699,7 +712,9 @@ class MainScene extends Phaser.Scene {
 
     // init influence map
     const tilesPositionHash = [...this.floorImageTiles.keys()];
-    this.influencesMaps.forEach((map) => map.init(tilesPositionHash, this.mapWidth, this.mapHeight));
+    this.influencesMaps.forEach((map) =>
+      map.init(tilesPositionHash, this.mapWidth, this.mapHeight)
+    );
 
     // add island base
     // this.islandbaseImage = this.add.image(0, 0, 'islandbase').setDepth(9999999);

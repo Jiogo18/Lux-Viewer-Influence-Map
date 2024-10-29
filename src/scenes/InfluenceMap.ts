@@ -10,32 +10,68 @@ function linearInterpolation(
   return currentValue * momentum + targetValue * (1 - momentum);
 }
 
-type Decay = 'exponential' | 'linear';
-
 export interface InfluenceMapProps {
   /**
-   * 0.1 = faster changes, 0.9 = slower changes
+   * Control how much we want historical data (range `]0;1]`)
+   * - Value closer to `0` = faster changes, don't use historical data
+   * - Value closer to `1` = slower changes, keep historical data
    */
   momentum: number;
-  /**
-   * Function used for the decay
-   */
-  decayFunction: Decay;
-  /**
-   * Control how much the decay is impactful with the distance
-   */
-  decay: number;
   /**
    * Number of frames between updates
    */
   updateCooldown: number;
+  /**
+   * Base convolution matrix, e.g. a Gaussian matrix
+   */
+  convolutionMatrix: number[];
 }
-export const INFLUENCE_MAP_PROPS_DEFAULT: InfluenceMapProps = {
-  momentum: 0.8,
-  decayFunction: 'exponential',
-  decay: 0.4,
-  updateCooldown: 1,
-};
+export function createInfluenceMapPropsDefault(): InfluenceMapProps {
+  return {
+    momentum: 0.999,
+    updateCooldown: 1,
+    convolutionMatrix: createGaussianLikeMatrix({
+      spread: 0.2,
+      naturalDecay: 0.001,
+    }),
+  };
+}
+export function createGaussianMatrix(): number[] {
+  return [1, 2, 1, 2, 4, 2, 1, 2, 1];
+}
+export function createGaussianLikeMatrix(params: {
+  /**
+   * Control how much the influence spread (range `]0;1]`)
+   * - Value closer to `1`: propagates more
+   * - Value closer to `0`: propagates less
+   */
+  spread: number;
+  /**
+   * Control how much to reduce all influence over time (range `[0;1]`)
+   * - Value closer to `0` will eventually fill the entire map, influence never decreases,
+   * expected with sources of negative influence
+   * - Value closer to `1` decreases drastically the influence over time
+   */
+  naturalDecay: number;
+  /**
+   * Base convolution matrix, e.g. a Gaussian matrix
+   */
+  baseMatrix?: number[];
+}): number[] {
+  const m = params.baseMatrix ?? createGaussianMatrix();
+
+  // add decay
+  m.forEach((_, i) => i !== 4 && (m[i] *= params.spread));
+
+  // normalize
+  const sum = m.reduce((p, c) => p + c, 0);
+  m.forEach((v, i) => (m[i] /= sum));
+
+  // add natural decay
+  m.forEach((v, i) => (m[i] *= 1 - params.naturalDecay));
+
+  return m;
+}
 
 export class InfluenceMap {
   private dataTiles: Map<number, number> = new Map();
@@ -43,6 +79,9 @@ export class InfluenceMap {
   private cooldown: number = 0;
   public mapWidth: number = 16;
   public mapHeight: number = 16;
+  get matrix() {
+    return this.props.convolutionMatrix;
+  }
 
   /**
    * @param getBaseInfluence Callback to obtain the influence of a tile
@@ -50,7 +89,7 @@ export class InfluenceMap {
    */
   constructor(
     private getBaseInfluence: (positionHash: number, frame: Frame) => number,
-    private props: InfluenceMapProps = INFLUENCE_MAP_PROPS_DEFAULT
+    private props: InfluenceMapProps = createInfluenceMapPropsDefault()
   ) {}
 
   init(tilesPositionHash: number[], mapWidth: number, mapHeight: number) {
@@ -60,15 +99,6 @@ export class InfluenceMap {
     }
     this.mapWidth = mapWidth;
     this.mapHeight = mapHeight;
-  }
-
-  private applyDecay(value: number): number {
-    switch (this.props.decayFunction) {
-      case 'exponential':
-        return value * Math.exp(-this.props.decay);
-      case 'linear':
-        return value * this.props.decay;
-    }
   }
 
   update(frame: Frame) {
@@ -88,20 +118,15 @@ export class InfluenceMap {
     }
 
     // Propagate and store in the final map
-    for (let [p, prevValue] of this.bufferDataTiles) {
-      const valueNeighbours = this.getNeighbours(p)
+    for (let [p, prevValue] of this.dataTiles) {
+      let newValue = this.getNeighbours(p)
         .map((n) => this.bufferDataTiles.get(n))
+        .map((v, i) => (v !== undefined ? v * this.matrix[i] : undefined))
         .filter((v) => v !== undefined)
-        .map((v) => this.applyDecay(v));
-      const maxInf = valueNeighbours.reduce((p, c) => Math.max(p, c), 0);
-      const minInf = valueNeighbours.reduce((p, c) => Math.min(p, c), 0);
+        .reduce((p, c) => p + c, 0);
 
-      const mostDominant = -minInf > maxInf ? minInf : maxInf;
-      const newValue = linearInterpolation(
-        prevValue,
-        mostDominant,
-        this.props.momentum
-      );
+      newValue = linearInterpolation(prevValue, newValue, this.props.momentum);
+
       this.dataTiles.set(p, newValue);
     }
   }
@@ -111,14 +136,23 @@ export class InfluenceMap {
   }
 
   private getNeighbours(positionHash: number) {
-    const facteurHashX = 10e5;
-    const facteurHashY = 1;
+    const dX = 10e5;
+    const dY = 1;
     const position: Position = hashToMapPosition(positionHash);
+    const westValid = 0 < position.x;
+    const northValid = 0 < position.y;
+    const eastValid = position.x < this.mapWidth - 1;
+    const southValid = position.y < this.mapHeight - 1;
     return [
-      0 < position.x ? positionHash - facteurHashX : undefined,
-      0 < position.y ? positionHash - facteurHashY : undefined,
-      position.x < this.mapWidth - 1 ? positionHash + facteurHashX : undefined,
-      position.y < this.mapHeight - 1 ? positionHash + facteurHashY : undefined,
+      northValid && westValid ? positionHash - dY - dX : undefined,
+      northValid ? positionHash - dY : undefined,
+      northValid && eastValid ? positionHash - dY + dX : undefined,
+      westValid ? positionHash - dX : undefined,
+      positionHash,
+      eastValid ? positionHash + dX : undefined,
+      southValid && westValid ? positionHash + dY - dX : undefined,
+      southValid ? positionHash + dY : undefined,
+      southValid && eastValid ? positionHash + dY + dX : undefined,
     ];
   }
 }
