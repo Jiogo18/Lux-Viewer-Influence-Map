@@ -538,7 +538,15 @@ export const GameComponent = () => {
     });
   }
   return (
-    <div className="Game">
+    <div
+      className="Game"
+      onDragOver={(ev) => ev.preventDefault()}
+      onDrop={(ev) => {
+        ev.preventDefault();
+        fileInput.current.files = ev.dataTransfer.files;
+        handleUpload();
+      }}
+    >
       <ThemeProvider theme={theme}>
         <div id="content"></div>
         {!isReady && warningMessage === '' && (
