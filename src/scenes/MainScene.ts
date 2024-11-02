@@ -941,6 +941,7 @@ class MainScene extends Phaser.Scene {
   }
 
   public turn = 0;
+  private previousRenderedTurn: number = -1;
 
   public handleTileClicked: HandleTileClicked;
   public handleTileHover: HandleTileClicked;
@@ -988,6 +989,8 @@ class MainScene extends Phaser.Scene {
 
   renderFrame(turn: number) {
     this.turn = turn;
+    const isNewTurn = this.turn !== this.previousRenderedTurn;
+    this.previousRenderedTurn = this.turn;
     const f = this.frames[turn];
     if (!f) {
       return;
@@ -1179,16 +1182,21 @@ class MainScene extends Phaser.Scene {
         newy = p[1] - 20 * this.defaultScales.worker * this.overallScale;
       }
 
-      // create smooth movement
-      this.tweens.add({
-        targets: sprite,
-        x: newx,
-        y: newy,
-        ease: 'Linear',
-        duration: 340 / this.speed,
-        repeat: 0,
-        yoyo: false,
-      });
+      if (isNewTurn && this.speed < 32) {
+        // create smooth movement
+        this.tweens.add({
+          targets: sprite,
+          x: newx,
+          y: newy,
+          ease: 'Linear',
+          duration: 340 / this.speed,
+          repeat: 0,
+          yoyo: false,
+        });
+      } else {
+        this.tweens.getTweensOf(sprite).forEach(tween => tween.stop());
+        sprite.setPosition(newx, newy);
+      }
 
       if (data.type === LUnit.Type.WORKER) {
         // add 1/10e5 to place this in front of cities
